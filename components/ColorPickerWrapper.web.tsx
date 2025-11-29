@@ -4,10 +4,10 @@ import {
     Text,
     TouchableOpacity,
     View,
-    useColorScheme,
     TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 // Helper function to get contrasting text color
 const getContrastColor = (hexColor: string): string => {

@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef, useState } from "react";
 import {
     Alert,
@@ -12,9 +11,9 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    useColorScheme,
     View,
 } from "react-native";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 interface HistoryEntry {
     timestamp: number;
@@ -112,6 +111,7 @@ const Counter: React.FC<CounterProps> = ({
             tension: 50,
             friction: 7,
         }).start();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [progress, count, target]);
 
     const handleLongPress = () => {
@@ -212,7 +212,7 @@ const Counter: React.FC<CounterProps> = ({
                                     style={styles.iconButton}
                                 >
                                     <Ionicons
-                                        name="ellipsis-horizontal"
+                                        name="ellipsis-vertical"
                                         size={20}
                                         color={subTextColor}
                                     />
@@ -259,7 +259,11 @@ const Counter: React.FC<CounterProps> = ({
                         disabled={isSelectionMode}
                         activeOpacity={0.8}
                     >
-                        <Ionicons name="remove" size={24} color={textColor} />
+                        <Ionicons
+                            name="remove-circle"
+                            size={32}
+                            color={textColor}
+                        />
                     </TouchableOpacity>
 
                     <Text
@@ -297,8 +301,8 @@ const Counter: React.FC<CounterProps> = ({
                         activeOpacity={0.8}
                     >
                         <Ionicons
-                            name="add"
-                            size={24}
+                            name="add-circle"
+                            size={32}
                             color={getContrastColor(color)}
                         />
                     </TouchableOpacity>
@@ -451,8 +455,8 @@ const Counter: React.FC<CounterProps> = ({
                             }}
                         >
                             <Ionicons
-                                name="pencil"
-                                size={24}
+                                name="create-outline"
+                                size={26}
                                 color={isDark ? "#0A84FF" : "#007AFF"}
                             />
                             <Text
@@ -480,8 +484,8 @@ const Counter: React.FC<CounterProps> = ({
                             }}
                         >
                             <Ionicons
-                                name="time"
-                                size={24}
+                                name="time-outline"
+                                size={26}
                                 color={isDark ? "#32D74B" : "#34C759"}
                             />
                             <Text
@@ -509,8 +513,8 @@ const Counter: React.FC<CounterProps> = ({
                             }}
                         >
                             <Ionicons
-                                name="refresh"
-                                size={24}
+                                name="reload-circle-outline"
+                                size={26}
                                 color={isDark ? "#FF9F0A" : "#FF9500"}
                             />
                             <Text
@@ -531,8 +535,8 @@ const Counter: React.FC<CounterProps> = ({
                             }}
                         >
                             <Ionicons
-                                name="trash"
-                                size={24}
+                                name="trash-outline"
+                                size={26}
                                 color={isDark ? "#FF453A" : "#FF3B30"}
                             />
                             <Text
@@ -583,10 +587,10 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         borderWidth: 1,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 3,
     },
     colorDot: {
         width: 8,
@@ -610,14 +614,15 @@ const styles = StyleSheet.create({
     },
     counterLabel: {
         fontSize: 18,
-        fontWeight: "600",
-        letterSpacing: 0,
+        fontWeight: "700",
+        letterSpacing: 0.3,
     },
     targetLabel: {
         fontSize: 13,
-        marginTop: 2,
-        fontWeight: "500",
-        opacity: 0.7,
+        marginTop: 4,
+        fontWeight: "600",
+        opacity: 0.65,
+        letterSpacing: 0.2,
     },
     headerActions: {
         flexDirection: "row",
@@ -642,12 +647,12 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
     },
     countValue: {
-        fontSize: 48,
-        fontWeight: "700",
+        fontSize: 52,
+        fontWeight: "800",
         minWidth: 100,
         textAlign: "center",
         fontVariant: ["tabular-nums"],
-        letterSpacing: -1,
+        letterSpacing: -1.5,
     },
     button: {
         width: 56,
@@ -656,6 +661,11 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         borderWidth: 0,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
     },
     modalOverlay: {
         flex: 1,
@@ -666,10 +676,15 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
-        maxHeight: "70%",
+        maxHeight: "80%",
         borderTopWidth: 1,
         borderLeftWidth: 1,
         borderRightWidth: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
     },
     modalHeader: {
         flexDirection: "row",
@@ -713,18 +728,18 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     quickMenu: {
-        width: "85%",
-        maxWidth: 360,
-        borderRadius: 20,
-        borderWidth: 0,
+        width: "90%",
+        maxWidth: 320,
+        borderRadius: 16,
+        borderWidth: 1,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.25,
         shadowRadius: 16,
-        elevation: 8,
+        elevation: 12,
     },
     quickMenuTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: "800",
         padding: 16,
         textAlign: "center",
@@ -739,9 +754,9 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
     },
     quickMenuItemText: {
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: "600",
-        letterSpacing: 0.2,
+        letterSpacing: 0.3,
     },
     quickMenuCancel: {
         padding: 16,

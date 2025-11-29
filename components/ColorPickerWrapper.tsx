@@ -1,12 +1,7 @@
 import React, { useState } from "react";
-import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    useColorScheme,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 // Helper function to get contrasting text color
 const getContrastColor = (hexColor: string): string => {
@@ -193,25 +188,25 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     colorOption: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
         borderWidth: 0,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: 3,
     },
     selectedColor: {
-        borderWidth: 3,
+        borderWidth: 3.5,
         borderColor: "#FFFFFF",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 4,
-        transform: [{ scale: 1.05 }],
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+        transform: [{ scale: 1.08 }],
     },
     customColorButton: {
         justifyContent: "center",
@@ -221,9 +216,14 @@ const styles = StyleSheet.create({
     },
     customPickerContainer: {
         padding: 20,
-        borderRadius: 16,
+        borderRadius: 14,
         marginTop: 16,
         borderWidth: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 2,
     },
     colorInputContainer: {
         flexDirection: "row",
@@ -232,20 +232,21 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     colorPreview: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 52,
+        height: 52,
+        borderRadius: 26,
         borderWidth: 0,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 3,
     },
     colorText: {
-        fontSize: 16,
-        fontWeight: "600",
+        fontSize: 17,
+        fontWeight: "700",
         fontFamily: "monospace",
-        letterSpacing: 0.5,
+        letterSpacing: 1,
     },
     hexInputRow: {
         flexDirection: "row",
@@ -262,10 +263,15 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         borderWidth: 0,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     applyButtonText: {
         fontSize: 16,
-        fontWeight: "600",
-        letterSpacing: 0,
+        fontWeight: "700",
+        letterSpacing: 0.3,
     },
 });

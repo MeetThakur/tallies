@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
-    FlatList,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -13,9 +12,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    useColorScheme,
     View,
-    Appearance,
     RefreshControl,
     Alert,
 } from "react-native";
@@ -26,6 +23,7 @@ import DraggableFlatList, {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ColorPickerWrapper } from "../../components/ColorPickerWrapper";
 import Counter from "../../components/Counter";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface HistoryEntry {
     timestamp: number;
@@ -103,8 +101,7 @@ export default function HomeScreen() {
     const [currentCounterId, setCurrentCounterId] = useState<string | null>(
         null,
     );
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === "dark";
+    const { isDark, toggleTheme } = useTheme();
 
     useEffect(() => {
         loadCounters();
@@ -112,6 +109,7 @@ export default function HomeScreen() {
 
     useEffect(() => {
         saveCounters();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [counters]);
 
     const loadCounters = async () => {
@@ -282,8 +280,7 @@ export default function HomeScreen() {
     };
 
     const toggleColorScheme = () => {
-        const newScheme = isDark ? "light" : "dark";
-        Appearance.setColorScheme(newScheme);
+        toggleTheme();
     };
 
     const toggleSelectionMode = () => {
@@ -452,8 +449,8 @@ export default function HomeScreen() {
                                     disabled={counters.length === 0}
                                 >
                                     <Ionicons
-                                        name="checkmark-done"
-                                        size={18}
+                                        name="checkmark-done-outline"
+                                        size={20}
                                         color="#FFFFFF"
                                     />
                                 </TouchableOpacity>
@@ -470,8 +467,8 @@ export default function HomeScreen() {
                                     disabled={selectedCounters.length === 0}
                                 >
                                     <Ionicons
-                                        name="refresh"
-                                        size={18}
+                                        name="reload-outline"
+                                        size={20}
                                         color="#FFFFFF"
                                     />
                                 </TouchableOpacity>
@@ -488,8 +485,8 @@ export default function HomeScreen() {
                                     disabled={selectedCounters.length === 0}
                                 >
                                     <Ionicons
-                                        name="trash"
-                                        size={18}
+                                        name="trash-outline"
+                                        size={20}
                                         color="#FFFFFF"
                                     />
                                 </TouchableOpacity>
@@ -507,15 +504,19 @@ export default function HomeScreen() {
                                         {
                                             backgroundColor: isDark
                                                 ? "rgba(255, 255, 255, 0.1)"
-                                                : "rgba(120, 120, 128, 0.16)",
+                                                : "transparent",
+                                            borderWidth: isDark ? 0 : 1,
+                                            borderColor: isDark
+                                                ? "transparent"
+                                                : borderColor,
                                         },
                                     ]}
                                     onPress={toggleSelectionMode}
                                 >
                                     <Ionicons
-                                        name="checkmark-circle-outline"
-                                        size={18}
-                                        color={textColor}
+                                        name="checkbox-outline"
+                                        size={20}
+                                        color={isDark ? textColor : "#007AFF"}
                                     />
                                 </TouchableOpacity>
                                 <TouchableOpacity
@@ -524,15 +525,19 @@ export default function HomeScreen() {
                                         {
                                             backgroundColor: isDark
                                                 ? "rgba(255, 255, 255, 0.1)"
-                                                : "rgba(120, 120, 128, 0.16)",
+                                                : "transparent",
+                                            borderWidth: isDark ? 0 : 1,
+                                            borderColor: isDark
+                                                ? "transparent"
+                                                : borderColor,
                                         },
                                     ]}
                                     onPress={toggleColorScheme}
                                 >
                                     <Ionicons
                                         name={isDark ? "sunny" : "moon"}
-                                        size={18}
-                                        color={textColor}
+                                        size={20}
+                                        color={isDark ? "#FFF" : "#007AFF"}
                                     />
                                 </TouchableOpacity>
                                 <TouchableOpacity
@@ -547,8 +552,8 @@ export default function HomeScreen() {
                                     onPress={openAddModal}
                                 >
                                     <Ionicons
-                                        name="add"
-                                        size={18}
+                                        name="add-circle"
+                                        size={20}
                                         color="#FFFFFF"
                                     />
                                     <Text style={styles.addButtonText}>
@@ -605,8 +610,8 @@ export default function HomeScreen() {
                                 onPress={openAddModal}
                             >
                                 <Ionicons
-                                    name="add"
-                                    size={20}
+                                    name="add-circle"
+                                    size={24}
                                     color="#FFFFFF"
                                 />
                                 <Text style={styles.emptyStateButtonText}>
@@ -678,8 +683,8 @@ export default function HomeScreen() {
                                         onPress={() => setShowTemplates(true)}
                                     >
                                         <Ionicons
-                                            name="apps"
-                                            size={20}
+                                            name="grid-outline"
+                                            size={22}
                                             color={
                                                 isDark ? "#0A84FF" : "#007AFF"
                                             }
@@ -1169,12 +1174,17 @@ const styles = StyleSheet.create({
         paddingTop: StatusBar.currentHeight || 0,
     },
     header: {
-        paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        borderBottomWidth: 0,
+        borderBottomWidth: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     title: {
         fontSize: 28,
@@ -1195,19 +1205,24 @@ const styles = StyleSheet.create({
         fontWeight: "500",
     },
     compactButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         alignItems: "center",
         justifyContent: "center",
     },
     addButton: {
-        paddingVertical: 10,
+        paddingVertical: 8,
         paddingHorizontal: 16,
-        borderRadius: 20,
+        borderRadius: 18,
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
+        shadowColor: "#007AFF",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     addButtonText: {
         color: "#FFFFFF",
@@ -1237,8 +1252,9 @@ const styles = StyleSheet.create({
         letterSpacing: 0,
     },
     emptyStateEmoji: {
-        fontSize: 80,
-        marginBottom: 8,
+        fontSize: 72,
+        marginBottom: 16,
+        opacity: 0.9,
     },
     emptyStateSubtext: {
         fontSize: 15,
@@ -1250,14 +1266,20 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 8,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 20,
+        paddingVertical: 14,
+        paddingHorizontal: 28,
+        borderRadius: 24,
+        shadowColor: "#007AFF",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
     },
     emptyStateButtonText: {
         color: "#FFFFFF",
-        fontSize: 16,
-        fontWeight: "600",
+        fontSize: 17,
+        fontWeight: "700",
+        letterSpacing: 0.5,
     },
     modalOverlay: {
         flex: 1,
@@ -1306,11 +1328,16 @@ const styles = StyleSheet.create({
         height: 140,
     },
     saveButton: {
-        marginTop: 16,
+        marginTop: 8,
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: "center",
-        borderWidth: 0,
+        borderWidth: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
     },
     saveButtonText: {
         fontSize: 17,
@@ -1421,14 +1448,19 @@ const styles = StyleSheet.create({
     },
     undoContainer: {
         position: "absolute",
-        bottom: 90,
-        left: 20,
-        right: 20,
+        bottom: 20,
+        left: 16,
+        right: 16,
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 16,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
     },
     undoContent: {
         flexDirection: "row",
@@ -1441,9 +1473,9 @@ const styles = StyleSheet.create({
     },
     undoButton: {
         paddingVertical: 8,
-        paddingHorizontal: 16,
+        paddingHorizontal: 18,
         borderRadius: 10,
-        borderWidth: 0,
+        borderWidth: 1.5,
     },
 
     headerButtonText: {
