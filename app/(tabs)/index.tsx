@@ -19,10 +19,12 @@ import { AddCounterModal } from "../../components/AddCounterModal";
 import Counter from "../../components/Counter";
 import { CustomIncrementModal } from "../../components/CustomIncrementModal";
 import { EditCounterModal } from "../../components/EditCounterModal";
+import { ExportMenuModal } from "../../components/ExportMenuModal";
 import { useTheme } from "../../contexts/ThemeContext";
 import { CounterItem, useCounters } from "../../hooks/useCounters";
 import { useSelection } from "../../hooks/useSelection";
 import { useUndo } from "../../hooks/useUndo";
+import { exportCounters, importCountersFromFile, shareCounterSummary } from "../../utils/exportImport";
 
 export default function HomeScreen() {
     // Custom hooks
@@ -61,6 +63,7 @@ export default function HomeScreen() {
     const [customIncrementModalVisible, setCustomIncrementModalVisible] = useState(false);
     const [currentCounterId, setCurrentCounterId] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [showExportMenu, setShowExportMenu] = useState(false);
 
     // Handlers
     const handleAddCounter = (name: string, target: string, color: string) => {
@@ -150,6 +153,45 @@ export default function HomeScreen() {
                 },
             ]
         );
+    };
+
+    const handleExport = async () => {
+        setShowExportMenu(false);
+        await exportCounters(counters);
+    };
+
+    const handleImport = async () => {
+        setShowExportMenu(false);
+        const imported = await importCountersFromFile();
+        if (imported) {
+            Alert.alert(
+                "Import Counters",
+                `Found ${imported.length} counters. How would you like to import them?`,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                        text: "Replace All",
+                        style: "destructive",
+                        onPress: () => {
+                            // Replace all counters
+                            counters.forEach(c => deleteCounter(c.id));
+                            imported.forEach(c => addCounter(c));
+                        },
+                    },
+                    {
+                        text: "Add to Existing",
+                        onPress: () => {
+                            imported.forEach(c => addCounter(c));
+                        },
+                    },
+                ]
+            );
+        }
+    };
+
+    const handleShare = async () => {
+        setShowExportMenu(false);
+        await shareCounterSummary(counters);
     };
 
     const renderItem = ({ item, drag, isActive }: RenderItemParams<CounterItem>) => {
@@ -256,6 +298,25 @@ export default function HomeScreen() {
                         <>
                             <Text style={[styles.title, { color: textColor }]}>Tallies</Text>
                             <View style={styles.headerButtons}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.compactButton,
+                                        {
+                                            backgroundColor: isDark
+                                                ? "rgba(255, 255, 255, 0.1)"
+                                                : "transparent",
+                                            borderWidth: isDark ? 0 : 1,
+                                            borderColor: isDark ? "transparent" : borderColor,
+                                        },
+                                    ]}
+                                    onPress={() => setShowExportMenu(true)}
+                                >
+                                    <Ionicons
+                                        name="cloud-upload-outline"
+                                        size={20}
+                                        color={isDark ? textColor : "#007AFF"}
+                                    />
+                                </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
                                         styles.compactButton,
@@ -405,6 +466,15 @@ export default function HomeScreen() {
                         setCurrentCounterId(null);
                     }}
                     onIncrement={handleIncrementByAmount}
+                    isDark={isDark}
+                />
+
+                <ExportMenuModal
+                    visible={showExportMenu}
+                    onClose={() => setShowExportMenu(false)}
+                    onExport={handleExport}
+                    onImport={handleImport}
+                    onShare={handleShare}
                     isDark={isDark}
                 />
             </SafeAreaView>
