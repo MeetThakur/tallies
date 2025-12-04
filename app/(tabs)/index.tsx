@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
     Alert,
     Platform,
@@ -9,7 +9,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 import DraggableFlatList, {
     RenderItemParams,
@@ -17,9 +17,9 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AddCounterModal } from "../../components/AddCounterModal";
-import Counter from "../../components/Counter";
 import { CustomIncrementModal } from "../../components/CustomIncrementModal";
 import { EditCounterModal } from "../../components/EditCounterModal";
+import { SwipeableCounter } from "../../components/SwipeableCounter";
 import { useTheme } from "../../contexts/ThemeContext";
 import { CounterItem, useCounters } from "../../hooks/useCounters";
 import { useSelection } from "../../hooks/useSelection";
@@ -43,7 +43,7 @@ export default function HomeScreen() {
         refreshCounters,
     } = useCounters();
 
-    const { showUndo, undo } = useUndo<CounterItem>();
+    const { showUndo, markDeleted, undo } = useUndo<CounterItem>();
     const {
         isSelectionMode,
         selectedIds,
@@ -62,6 +62,14 @@ export default function HomeScreen() {
     const [customIncrementModalVisible, setCustomIncrementModalVisible] = useState(false);
     const [currentCounterId, setCurrentCounterId] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+
+    // QoL features
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState<string>("default");
+    const [isCompact, setIsCompact] = useState(false);
+    const [showSortMenu, setShowSortMenu] = useState(false);
+    const [quickEditModalVisible, setQuickEditModalVisible] = useState(false);
+    const [quickEditCounter, setQuickEditCounter] = useState<CounterItem | null>(null);
 
     // Handlers
     const handleAddCounter = (name: string, target: string, color: string) => {
@@ -89,7 +97,7 @@ export default function HomeScreen() {
     const handleDeleteCounter = (id: string) => {
         const deleted = deleteCounter(id);
         if (deleted) {
-            // Undo functionality handled by useUndo hook
+            markDeleted(deleted);
         }
     };
 
@@ -109,6 +117,20 @@ export default function HomeScreen() {
         if (currentCounterId) {
             incrementCounter(currentCounterId, amount);
             setCurrentCounterId(null);
+        }
+    };
+
+    const handleLongPressCount = (counterId: string) => {
+        const counter = counters.find(c => c.id === counterId);
+        if (counter) {
+            setQuickEditCounter(counter);
+            setQuickEditModalVisible(true);
+        }
+    };
+
+    const handleQuickEditCount = (newCount: number) => {
+        if (quickEditCounter) {
+            updateCounter(quickEditCounter.id, { count: newCount });
         }
     };
 
@@ -154,27 +176,64 @@ export default function HomeScreen() {
         );
     };
 
+    // Filter and sort counters
+    const filteredAndSortedCounters = useMemo(() => {
+        let result = [...counters];
+
+        // Filter by search query
+        if (searchQuery.trim()) {
+            result = result.filter(counter =>
+                counter.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        // Sort
+        switch (sortBy) {
+            case "name-asc":
+                result.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+            case "name-desc":
+                result.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+            case "count-high":
+                result.sort((a, b) => b.count - a.count);
+                break;
+            case "count-low":
+                result.sort((a, b) => a.count - b.count);
+                break;
+            case "date-new":
+                result.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+                break;
+            case "date-old":
+                result.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+                break;
+            default:
+                // Keep original order
+                break;
+        }
+
+        return result;
+    }, [counters, searchQuery, sortBy]);
+
     const renderItem = ({ item, drag, isActive }: RenderItemParams<CounterItem>) => {
         return (
             <ScaleDecorator>
-                <Counter
-                    id={item.id}
-                    name={item.name}
-                    count={item.count}
-                    target={item.target}
-                    color={item.color}
-                    history={item.history}
+                <SwipeableCounter
+                    counter={item}
                     onIncrement={incrementCounter}
                     onDecrement={decrementCounter}
                     onDelete={handleDeleteCounter}
                     onReset={resetCounter}
                     onEdit={() => handleOpenEditModal(item)}
                     onLongPressIncrement={handleCustomIncrement}
+                    onLongPressCount={handleLongPressCount}
                     drag={drag}
                     isActive={isActive}
                     isSelectionMode={isSelectionMode}
                     isSelected={isSelected(item.id)}
                     onSelect={toggleItem}
+                    isDark={isDark}
+                    isCompact={isCompact}
                 />
             </ScaleDecorator>
         );
@@ -332,13 +391,13 @@ export default function HomeScreen() {
                             <Text
                                 style={[
                                     styles.emptyStateText,
-                                    { color: isDark ? "#98989D" : "#8E8E93" },
+                                    { color: textColor },
                                 ]}
                             >
-                                No counters yet
+                                No Counters Yet
                             </Text>
                             <Text style={[styles.emptyStateSubtext, { color: subtleTextColor }]}>
-                                Create your first counter to start tracking
+                                Tap the button below to create{"\n"}your first counter and start tracking
                             </Text>
                             <TouchableOpacity
                                 style={[
@@ -348,7 +407,7 @@ export default function HomeScreen() {
                                 onPress={() => setAddModalVisible(true)}
                             >
                                 <Ionicons name="add-circle" size={24} color="#FFFFFF" />
-                                <Text style={styles.emptyStateButtonText}>Create Counter</Text>
+                                <Text style={styles.emptyStateButtonText}>Create Your First Counter</Text>
                             </TouchableOpacity>
                         </View>
                     }
@@ -426,6 +485,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
     title: {
         fontSize: 28,
@@ -473,18 +537,21 @@ const styles = StyleSheet.create({
         paddingHorizontal: 40,
     },
     emptyStateEmoji: {
-        fontSize: 64,
-        marginBottom: 16,
+        fontSize: 80,
+        marginBottom: 20,
     },
     emptyStateText: {
-        fontSize: 20,
-        fontWeight: "700",
-        marginBottom: 8,
+        fontSize: 24,
+        fontWeight: "800",
+        marginBottom: 12,
+        letterSpacing: 0.5,
     },
     emptyStateSubtext: {
-        fontSize: 14,
+        fontSize: 16,
         textAlign: "center",
-        marginBottom: 24,
+        marginBottom: 32,
+        lineHeight: 24,
+        paddingHorizontal: 20,
     },
     emptyStateButton: {
         flexDirection: "row",

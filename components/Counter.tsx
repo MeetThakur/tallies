@@ -34,11 +34,13 @@ interface CounterProps {
     onReset: (id: string) => void;
     onEdit: () => void;
     onLongPressIncrement?: (id: string) => void;
+    onLongPressCount?: (id: string) => void;
     drag?: () => void;
     isActive?: boolean;
     isSelectionMode?: boolean;
     isSelected?: boolean;
     onSelect?: (id: string) => void;
+    isCompact?: boolean;
 }
 
 const Counter: React.FC<CounterProps> = ({
@@ -54,11 +56,13 @@ const Counter: React.FC<CounterProps> = ({
     onReset,
     onEdit,
     onLongPressIncrement,
+    onLongPressCount,
     drag,
     isActive = false,
     isSelectionMode = false,
     isSelected = false,
     onSelect,
+    isCompact = false,
 }) => {
     const [historyVisible, setHistoryVisible] = useState(false);
     const [quickMenuVisible, setQuickMenuVisible] = useState(false);
@@ -67,12 +71,22 @@ const Counter: React.FC<CounterProps> = ({
 
     // Animation refs
     const progressAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const handleAction = (action: () => void) => {
         if (Platform.OS !== "web") {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
         action();
+    };
+
+    const handleLongPressCount = () => {
+        if (!isSelectionMode && onLongPressCount) {
+            if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            onLongPressCount(id);
+        }
     };
 
     const handleReset = () => {
@@ -104,6 +118,24 @@ const Counter: React.FC<CounterProps> = ({
         }).start();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [progress, count, target]);
+
+    // Very subtle scale animation on count change
+    useEffect(() => {
+        Animated.sequence([
+            Animated.spring(scaleAnim, {
+                toValue: 1.05,
+                useNativeDriver: true,
+                tension: 300,
+                friction: 10,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                useNativeDriver: true,
+                tension: 300,
+                friction: 10,
+            }),
+        ]).start();
+    }, [count]);
 
     const handleLongPress = () => {
         if (isSelectionMode) return;
@@ -257,19 +289,27 @@ const Counter: React.FC<CounterProps> = ({
                         />
                     </TouchableOpacity>
 
-                    <Text
-                        style={[
-                            styles.countValue,
-                            {
-                                color:
-                                    count >= (target || Infinity)
-                                        ? color
-                                        : textColor,
-                            },
-                        ]}
+                    <TouchableOpacity
+                        onLongPress={handleLongPressCount}
+                        activeOpacity={0.8}
+                        disabled={isSelectionMode}
                     >
-                        {count}
-                    </Text>
+                        <Animated.Text
+                            style={[
+                                styles.countValue,
+                                isCompact && styles.compactCount,
+                                {
+                                    color:
+                                        count >= (target || Infinity)
+                                            ? color
+                                            : textColor,
+                                    transform: [{ scale: scaleAnim }],
+                                },
+                            ]}
+                        >
+                            {count}
+                        </Animated.Text>
+                    </TouchableOpacity>
 
                     <TouchableOpacity
                         style={[
@@ -578,10 +618,10 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         borderWidth: 1,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 4,
     },
     colorDot: {
         width: 8,
@@ -644,6 +684,10 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontVariant: ["tabular-nums"],
         letterSpacing: -1.5,
+    },
+    compactCount: {
+        fontSize: 36,
+        minWidth: 80,
     },
     button: {
         width: 56,
