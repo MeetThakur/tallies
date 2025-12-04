@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
     Alert,
+    Platform,
     RefreshControl,
     SafeAreaView,
     StatusBar,
@@ -71,11 +72,12 @@ export default function HomeScreen() {
         });
     };
 
-    const handleEditCounter = (id: string, name: string, target: string, color: string) => {
+    const handleEditCounter = (id: string, name: string, target: string, color: string, count: string) => {
         updateCounter(id, {
             name,
             target: target ? parseInt(target) : undefined,
             color,
+            count: parseInt(count, 10),
         });
     };
 
@@ -415,6 +417,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: "row",

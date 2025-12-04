@@ -12,7 +12,6 @@ import {
     View,
 } from "react-native";
 import { PRESET_COLORS } from "../constants/colors";
-import { COUNTER_TEMPLATES } from "../constants/templates";
 import { sanitizeCounterName, validateCounterName, validateTarget } from "../utils/validation";
 import { ColorPickerWrapper } from "./ColorPickerWrapper";
 
@@ -27,7 +26,6 @@ export function AddCounterModal({ visible, onClose, onSave, isDark }: AddCounter
     const [name, setName] = useState("");
     const [target, setTarget] = useState("");
     const [selectedColor, setSelectedColor] = useState<string>(PRESET_COLORS[0]);
-    const [showTemplates, setShowTemplates] = useState(false);
     const [nameError, setNameError] = useState<string | null>(null);
     const [targetError, setTargetError] = useState<string | null>(null);
 
@@ -55,19 +53,9 @@ export function AddCounterModal({ visible, onClose, onSave, isDark }: AddCounter
         setName("");
         setTarget("");
         setSelectedColor(PRESET_COLORS[0]);
-        setShowTemplates(false);
         setNameError(null);
         setTargetError(null);
         onClose();
-    };
-
-    const applyTemplate = (template: typeof COUNTER_TEMPLATES[0]) => {
-        setName(template.name);
-        setTarget(template.target.toString());
-        setSelectedColor(template.color);
-        setShowTemplates(false);
-        setNameError(null);
-        setTargetError(null);
     };
 
     const textColor = isDark ? "#FFFFFF" : "#000000";
@@ -102,74 +90,6 @@ export function AddCounterModal({ visible, onClose, onSave, isDark }: AddCounter
                                 <Ionicons name="close" size={24} color={subtleTextColor} />
                             </TouchableOpacity>
                         </View>
-
-                        {/* Templates */}
-                        {!showTemplates ? (
-                            <TouchableOpacity
-                                style={[
-                                    styles.templateButton,
-                                    {
-                                        backgroundColor: isDark
-                                            ? "rgba(255, 255, 255, 0.1)"
-                                            : "rgba(0, 122, 255, 0.1)",
-                                        borderColor: isDark ? "#3A3A3C" : "#007AFF",
-                                    },
-                                ]}
-                                onPress={() => setShowTemplates(true)}
-                            >
-                                <Ionicons
-                                    name="grid-outline"
-                                    size={22}
-                                    color={isDark ? "#0A84FF" : "#007AFF"}
-                                />
-                                <Text
-                                    style={[
-                                        styles.templateButtonText,
-                                        { color: isDark ? "#0A84FF" : "#007AFF" },
-                                    ]}
-                                >
-                                    Use Template
-                                </Text>
-                            </TouchableOpacity>
-                        ) : (
-                            <>
-                                <View style={styles.templateHeader}>
-                                    <Text style={[styles.inputLabel, { color: subtleTextColor }]}>
-                                        Choose a Template
-                                    </Text>
-                                    <TouchableOpacity onPress={() => setShowTemplates(false)}>
-                                        <Text
-                                            style={[
-                                                styles.templateCloseText,
-                                                { color: isDark ? "#0A84FF" : "#007AFF" },
-                                            ]}
-                                        >
-                                            Cancel
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                                <View style={styles.templateGrid}>
-                                    {COUNTER_TEMPLATES.map((template, index) => (
-                                        <TouchableOpacity
-                                            key={index}
-                                            style={[
-                                                styles.templateCard,
-                                                {
-                                                    backgroundColor: isDark ? "#2C2C2E" : "#F2F2F7",
-                                                    borderColor: isDark ? "#3A3A3C" : "#E5E5EA",
-                                                },
-                                            ]}
-                                            onPress={() => applyTemplate(template)}
-                                        >
-                                            <Text style={styles.templateIcon}>{template.icon}</Text>
-                                            <Text style={[styles.templateName, { color: textColor }]}>
-                                                {template.name}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </>
-                        )}
 
                         {/* Name Input */}
                         <Text style={[styles.inputLabel, { color: subtleTextColor }]}>Name</Text>
@@ -261,54 +181,6 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 24,
         fontWeight: "800",
-    },
-    templateButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 2,
-        marginBottom: 20,
-    },
-    templateButtonText: {
-        fontSize: 16,
-        fontWeight: "700",
-        marginLeft: 8,
-    },
-    templateHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 12,
-    },
-    templateCloseText: {
-        fontSize: 16,
-        fontWeight: "600",
-    },
-    templateGrid: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 12,
-        marginBottom: 20,
-    },
-    templateCard: {
-        width: "30%",
-        aspectRatio: 1,
-        borderRadius: 12,
-        borderWidth: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 8,
-    },
-    templateIcon: {
-        fontSize: 32,
-        marginBottom: 4,
-    },
-    templateName: {
-        fontSize: 11,
-        fontWeight: "600",
-        textAlign: "center",
     },
     inputLabel: {
         fontSize: 14,

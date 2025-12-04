@@ -1,6 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
-import { Ionicons } from "@expo/vector-icons";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -18,14 +18,7 @@ export default function TabLayout() {
                 headerShown: false,
                 tabBarButton: HapticTab,
                 tabBarStyle: {
-                    backgroundColor:
-                        colorScheme === "dark" ? "#1E1E1E" : "#FFFFFF",
-                    borderTopWidth: 1,
-                    borderTopColor:
-                        colorScheme === "dark" ? "#2C2C2C" : "#E5E5EA",
-                    height: 60,
-                    paddingBottom: 8,
-                    paddingTop: 8,
+                    display: "none", // Hide the tab bar
                 },
                 tabBarLabelStyle: {
                     fontSize: 11,

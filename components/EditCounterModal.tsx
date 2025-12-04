@@ -20,7 +20,7 @@ interface EditCounterModalProps {
     visible: boolean;
     counter: CounterItem | null;
     onClose: () => void;
-    onSave: (id: string, name: string, target: string, color: string) => void;
+    onSave: (id: string, name: string, target: string, color: string, count: string) => void;
     isDark: boolean;
 }
 
@@ -33,20 +33,24 @@ export function EditCounterModal({
 }: EditCounterModalProps) {
     const [name, setName] = useState(counter?.name || "");
     const [target, setTarget] = useState(counter?.target?.toString() || "");
+    const [currentCount, setCurrentCount] = useState(counter?.count?.toString() || "0");
     const [selectedColor, setSelectedColor] = useState<string>(
         counter?.color || PRESET_COLORS[0]
     );
     const [nameError, setNameError] = useState<string | null>(null);
     const [targetError, setTargetError] = useState<string | null>(null);
+    const [countError, setCountError] = useState<string | null>(null);
 
     // Update state when counter changes
     React.useEffect(() => {
         if (counter) {
             setName(counter.name);
             setTarget(counter.target?.toString() || "");
+            setCurrentCount(counter.count?.toString() || "0");
             setSelectedColor(counter.color || PRESET_COLORS[0]);
             setNameError(null);
             setTargetError(null);
+            setCountError(null);
         }
     }, [counter]);
 
@@ -58,6 +62,13 @@ export function EditCounterModal({
         const nameValidation = validateCounterName(sanitizedName);
         const targetValidation = target ? validateTarget(target) : null;
 
+        // Validate count
+        const countNum = parseInt(currentCount, 10);
+        if (isNaN(countNum) || countNum < 0) {
+            setCountError("Count must be a positive number");
+            return;
+        }
+
         if (nameValidation) {
             setNameError(nameValidation);
             return;
@@ -68,13 +79,14 @@ export function EditCounterModal({
             return;
         }
 
-        onSave(counter.id, sanitizedName, target, selectedColor);
+        onSave(counter.id, sanitizedName, target, selectedColor, currentCount);
         handleClose();
     };
 
     const handleClose = () => {
         setNameError(null);
         setTargetError(null);
+        setCountError(null);
         onClose();
     };
 
@@ -165,15 +177,29 @@ export function EditCounterModal({
                             onSelectColor={setSelectedColor}
                         />
 
-                        {/* Current Count Info */}
-                        <View style={styles.infoBox}>
-                            <Text style={[styles.infoLabel, { color: subtleTextColor }]}>
-                                Current Count
-                            </Text>
-                            <Text style={[styles.infoValue, { color: textColor }]}>
-                                {counter.count}
-                            </Text>
-                        </View>
+                        {/* Current Count Input */}
+                        <Text style={[styles.inputLabel, { color: subtleTextColor }]}>
+                            Current Count
+                        </Text>
+                        <TextInput
+                            style={[
+                                styles.input,
+                                {
+                                    backgroundColor: inputBg,
+                                    color: textColor,
+                                    borderColor: countError ? "#FF3B30" : borderColor,
+                                },
+                            ]}
+                            placeholder="Enter current count"
+                            placeholderTextColor={subtleTextColor}
+                            value={currentCount}
+                            onChangeText={(text) => {
+                                setCurrentCount(text);
+                                setCountError(null);
+                            }}
+                            keyboardType="numeric"
+                        />
+                        {countError && <Text style={styles.errorText}>{countError}</Text>}
 
                         {/* Save Button */}
                         <TouchableOpacity
