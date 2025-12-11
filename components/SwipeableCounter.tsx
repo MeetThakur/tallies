@@ -14,6 +14,7 @@ interface SwipeableCounterProps {
     onReset: (id: string) => void;
     onEdit: () => void;
     onLongPressIncrement?: (id: string) => void;
+    onLongPressDecrement?: (id: string) => void;
     onLongPressCount?: (id: string) => void;
     drag?: () => void;
     isActive?: boolean;

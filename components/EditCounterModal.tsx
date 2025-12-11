@@ -64,8 +64,8 @@ export function EditCounterModal({
 
         // Validate count
         const countNum = parseInt(currentCount, 10);
-        if (isNaN(countNum) || countNum < 0) {
-            setCountError("Count must be a positive number");
+        if (isNaN(countNum)) {
+            setCountError("Count must be a valid number");
             return;
         }
 
@@ -197,7 +197,7 @@ export function EditCounterModal({
                                 setCurrentCount(text);
                                 setCountError(null);
                             }}
-                            keyboardType="numeric"
+                            keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
                         />
                         {countError && <Text style={styles.errorText}>{countError}</Text>}
 

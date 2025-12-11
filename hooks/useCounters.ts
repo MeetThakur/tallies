@@ -104,13 +104,13 @@ export function useCounters() {
         );
     };
 
-    const decrementCounter = (id: string) => {
+    const decrementCounter = (id: string, amount: number = 1) => {
         setCounters((prev) =>
             prev.map((counter) =>
                 counter.id === id
                     ? {
                         ...counter,
-                        count: Math.max(0, counter.count - 1),
+                        count: counter.count - amount,
                         history: [
                             ...counter.history,
                             {

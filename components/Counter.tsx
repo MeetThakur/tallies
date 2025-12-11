@@ -34,6 +34,7 @@ interface CounterProps {
     onReset: (id: string) => void;
     onEdit: () => void;
     onLongPressIncrement?: (id: string) => void;
+    onLongPressDecrement?: (id: string) => void;
     onLongPressCount?: (id: string) => void;
     drag?: () => void;
     isActive?: boolean;
@@ -56,6 +57,7 @@ const Counter: React.FC<CounterProps> = ({
     onReset,
     onEdit,
     onLongPressIncrement,
+    onLongPressDecrement,
     onLongPressCount,
     drag,
     isActive = false,
@@ -104,7 +106,7 @@ const Counter: React.FC<CounterProps> = ({
         );
     };
 
-    const progress = target && target > 0 ? Math.min(count / target, 1) : 0;
+    const progress = target && target > 0 ? Math.max(0, Math.min(count / target, 1)) : 0;
     const textColor = isDark ? "#FFFFFF" : "#000000";
     const subTextColor = isDark ? "#ABABAB" : "#666666";
 
@@ -279,6 +281,16 @@ const Counter: React.FC<CounterProps> = ({
                             isSelectionMode && { opacity: 0.5 },
                         ]}
                         onPress={() => handleAction(() => onDecrement(id))}
+                        onLongPress={() => {
+                            if (!isSelectionMode && onLongPressDecrement) {
+                                if (Platform.OS !== "web") {
+                                    Haptics.impactAsync(
+                                        Haptics.ImpactFeedbackStyle.Heavy,
+                                    );
+                                }
+                                onLongPressDecrement(id);
+                            }
+                        }}
                         disabled={isSelectionMode}
                         activeOpacity={0.8}
                     >

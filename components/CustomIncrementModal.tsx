@@ -15,6 +15,7 @@ interface CustomIncrementModalProps {
     onClose: () => void;
     onIncrement: (amount: number) => void;
     isDark: boolean;
+    mode?: "increment" | "decrement";
 }
 
 export function CustomIncrementModal({
@@ -22,6 +23,7 @@ export function CustomIncrementModal({
     onClose,
     onIncrement,
     isDark,
+    mode = "increment",
 }: CustomIncrementModalProps) {
     const [value, setValue] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export function CustomIncrementModal({
                 <View style={[styles.content, { backgroundColor: bgColor }]}>
                     <View style={styles.header}>
                         <Text style={[styles.title, { color: textColor }]}>
-                            Custom Increment
+                            Custom {mode === "increment" ? "Increment" : "Decrement"}
                         </Text>
                         <TouchableOpacity onPress={handleClose}>
                             <Ionicons name="close" size={24} color={subtleTextColor} />
@@ -69,7 +71,7 @@ export function CustomIncrementModal({
                     </View>
 
                     <Text style={[styles.label, { color: subtleTextColor }]}>
-                        Enter amount to increment
+                        Enter amount to {mode === "increment" ? "increment" : "decrement"}
                     </Text>
                     <TextInput
                         style={[
@@ -110,7 +112,7 @@ export function CustomIncrementModal({
                             onPress={handleIncrement}
                         >
                             <Text style={[styles.buttonText, { color: "#FFFFFF" }]}>
-                                Increment
+                                {mode === "increment" ? "Increment" : "Decrement"}
                             </Text>
                         </TouchableOpacity>
                     </View>

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
     Modal,
+    Platform,
     StyleSheet,
     Text,
     TextInput,
@@ -38,8 +39,8 @@ export function QuickEditCountModal({
 
     const handleSave = () => {
         const num = parseInt(value, 10);
-        if (isNaN(num) || num < 0) {
-            setError("Count must be a positive number");
+        if (isNaN(num)) {
+            setError("Count must be a valid number");
             return;
         }
 
@@ -91,7 +92,7 @@ export function QuickEditCountModal({
                             setValue(text);
                             setError(null);
                         }}
-                        keyboardType="numeric"
+                        keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
                         autoFocus
                         selectTextOnFocus
                     />

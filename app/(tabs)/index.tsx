@@ -61,6 +61,7 @@ export default function HomeScreen() {
     const [editingCounter, setEditingCounter] = useState<CounterItem | null>(null);
     const [customIncrementModalVisible, setCustomIncrementModalVisible] = useState(false);
     const [currentCounterId, setCurrentCounterId] = useState<string | null>(null);
+    const [customModalMode, setCustomModalMode] = useState<"increment" | "decrement">("increment");
     const [refreshing, setRefreshing] = useState(false);
 
     // QoL features
@@ -110,12 +111,23 @@ export default function HomeScreen() {
 
     const handleCustomIncrement = (counterId: string) => {
         setCurrentCounterId(counterId);
+        setCustomModalMode("increment");
+        setCustomIncrementModalVisible(true);
+    };
+
+    const handleCustomDecrement = (counterId: string) => {
+        setCurrentCounterId(counterId);
+        setCustomModalMode("decrement");
         setCustomIncrementModalVisible(true);
     };
 
     const handleIncrementByAmount = (amount: number) => {
         if (currentCounterId) {
-            incrementCounter(currentCounterId, amount);
+            if (customModalMode === "increment") {
+                incrementCounter(currentCounterId, amount);
+            } else {
+                decrementCounter(currentCounterId, amount);
+            }
             setCurrentCounterId(null);
         }
     };
@@ -226,6 +238,7 @@ export default function HomeScreen() {
                     onReset={resetCounter}
                     onEdit={() => handleOpenEditModal(item)}
                     onLongPressIncrement={handleCustomIncrement}
+                    onLongPressDecrement={handleCustomDecrement}
                     onLongPressCount={handleLongPressCount}
                     drag={drag}
                     isActive={isActive}
@@ -467,6 +480,7 @@ export default function HomeScreen() {
                     }}
                     onIncrement={handleIncrementByAmount}
                     isDark={isDark}
+                    mode={customModalMode}
                 />
             </SafeAreaView>
         </GestureHandlerRootView>
