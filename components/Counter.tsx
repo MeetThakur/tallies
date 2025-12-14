@@ -19,6 +19,7 @@ import {
 interface HistoryEntry {
     timestamp: number;
     action: "increment" | "decrement";
+    amount: number;
 }
 
 interface CounterProps {
@@ -440,8 +441,8 @@ const Counter: React.FC<CounterProps> = ({
                                                 ]}
                                             >
                                                 {entry.action === "increment"
-                                                    ? "+1"
-                                                    : "-1"}
+                                                    ? `+${entry.amount || 1}`
+                                                    : `-${entry.amount || 1}`}
                                             </Text>
                                         </View>
                                     ))

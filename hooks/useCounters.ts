@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 export interface HistoryEntry {
     timestamp: number;
     action: "increment" | "decrement";
+    amount: number;
 }
 
 export interface CounterItem {
@@ -96,6 +97,7 @@ export function useCounters() {
                             {
                                 timestamp: Date.now(),
                                 action: "increment" as const,
+                                amount,
                             },
                         ],
                     }
@@ -116,6 +118,7 @@ export function useCounters() {
                             {
                                 timestamp: Date.now(),
                                 action: "decrement" as const,
+                                amount,
                             },
                         ],
                     }
