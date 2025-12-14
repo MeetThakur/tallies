@@ -1,7 +1,7 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { CounterItem } from "../hooks/useCounters";
 
 export const DataManager = {
@@ -10,32 +10,39 @@ export const DataManager = {
             console.log("Initiating export...");
             const data = JSON.stringify(counters, null, 2);
             const fileName = `tallies_backup_${new Date().toISOString().split("T")[0]}.json`;
-            const directory = FileSystem.cacheDirectory;
 
-            if (!directory) {
-                console.error("FileSystem.cacheDirectory is null");
-                Alert.alert("Export Error", "Could not access cache directory.");
-                return;
-            }
+            if (Platform.OS === "android") {
+                try {
+                    const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+                    if (permissions.granted) {
+                        const uri = await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, "application/json");
+                        await FileSystem.writeAsStringAsync(uri, data, { encoding: FileSystem.EncodingType.UTF8 });
+                        Alert.alert("Success", "Backup saved successfully!");
+                        return; // Exit if successful
+                    }
+                } catch (safError) {
+                    console.warn("SAF failed, falling back to share:", safError);
+                    Alert.alert("Folder Access Error", "Cannot save directly to the selected folder. Opening share menu instead.");
+                    // Fall through to fallback
+                }
 
-            const filePath = `${directory}${fileName}`;
-            console.log(`Writing to file: ${filePath}`);
-
-            await FileSystem.writeAsStringAsync(filePath, data, {
-                encoding: "utf8"
-            });
-            console.log("File written successfully.");
-
-            if (await Sharing.isAvailableAsync()) {
-                console.log("Sharing is available, attempting to share...");
-                await Sharing.shareAsync(filePath, {
-                    mimeType: "application/json",
-                    dialogTitle: "Export Tallies Data",
-                    UTI: "public.json"
-                });
+                // Fallback to sharing if permission denied or SAF fails
+                const directory = FileSystem.cacheDirectory;
+                if (!directory) return;
+                const filePath = `${directory}${fileName}`;
+                await FileSystem.writeAsStringAsync(filePath, data, { encoding: "utf8" });
+                if (await Sharing.isAvailableAsync()) {
+                    await Sharing.shareAsync(filePath, { mimeType: "application/json", dialogTitle: "Export Tallies Data", UTI: "public.json" });
+                }
             } else {
-                console.warn("Sharing is NOT available");
-                Alert.alert("Error", "Sharing is not available on this device");
+                // iOS and others
+                const directory = FileSystem.cacheDirectory;
+                if (!directory) return;
+                const filePath = `${directory}${fileName}`;
+                await FileSystem.writeAsStringAsync(filePath, data, { encoding: "utf8" });
+                if (await Sharing.isAvailableAsync()) {
+                    await Sharing.shareAsync(filePath, { mimeType: "application/json", dialogTitle: "Export Tallies Data", UTI: "public.json" });
+                }
             }
         } catch (error) {
             console.error("Export failed with error:", error);

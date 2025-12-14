@@ -123,6 +123,7 @@ export function SwipeableCounter({
                     onDelete={onDelete}
                     onEdit={onEdit}
                     onIncrement={onIncrement}
+                    createdAt={counter.createdAt}
                     {...counterProps}
                 />
             </Animated.View>

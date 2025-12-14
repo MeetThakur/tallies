@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
     Alert,
-    Platform,
     RefreshControl,
     SafeAreaView,
     StatusBar,
@@ -16,6 +15,7 @@ import DraggableFlatList, {
     ScaleDecorator,
 } from "react-native-draggable-flatlist";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AddCounterModal } from "../../components/AddCounterModal";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { CustomIncrementModal } from "../../components/CustomIncrementModal";
@@ -59,6 +59,9 @@ export default function HomeScreen() {
         clearSelection,
         isSelected,
     } = useSelection(counters);
+
+    // Insets for safe area
+    const insets = useSafeAreaInsets();
 
     // Modal states
     const [addModalVisible, setAddModalVisible] = useState(false);
@@ -316,7 +319,15 @@ export default function HomeScreen() {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
+            <SafeAreaView
+                style={[
+                    styles.container,
+                    {
+                        backgroundColor: bgColor,
+                        paddingTop: insets.top
+                    }
+                ]}
+            >
                 <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
                 {/* Header */}
@@ -594,7 +605,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: "row",
