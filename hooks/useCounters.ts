@@ -13,6 +13,7 @@ export interface CounterItem {
     count: number;
     target?: number;
     color?: string;
+    createdAt?: number;
     history: HistoryEntry[];
 }
 
@@ -60,6 +61,7 @@ export function useCounters() {
         const newCounter: CounterItem = {
             id: Date.now().toString(),
             count: 0,
+            createdAt: Date.now(),
             history: [],
             ...counter,
         };
@@ -145,6 +147,23 @@ export function useCounters() {
         setCounters((prev) => prev.filter((counter) => !ids.includes(counter.id)));
     };
 
+    const importCounters = (newCounters: CounterItem[], mode: "merge" | "replace") => {
+        if (mode === "replace") {
+            setCounters(newCounters);
+        } else {
+            // Merge: Add new counters, update existing ones if ID matches?
+            // Usually merge means keep existing, add new. If ID conflict, overwrite or skip?
+            // Let's simple merge: Filter out existing IDs from newCounters then append. 
+            // Or overwrite existing. 
+            // Let's overwrite existing with imported if IDs match, and add new ones.
+            setCounters(prev => {
+                const prevMap = new Map(prev.map(c => [c.id, c]));
+                newCounters.forEach(c => prevMap.set(c.id, c));
+                return Array.from(prevMap.values());
+            });
+        }
+    };
+
     const refreshCounters = async () => {
         await loadCounters();
     };
@@ -161,6 +180,7 @@ export function useCounters() {
         resetCounter,
         resetMultipleCounters,
         deleteMultipleCounters,
+        importCounters,
         refreshCounters,
     };
 }

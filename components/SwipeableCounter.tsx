@@ -30,6 +30,7 @@ export function SwipeableCounter({
     onDelete,
     onEdit,
     isDark,
+    onIncrement,
     ...counterProps
 }: SwipeableCounterProps) {
     const swipeableRef = useRef<Swipeable>(null);
@@ -111,20 +112,25 @@ export function SwipeableCounter({
             overshootRight={false}
             onSwipeableOpen={() => hapticFeedback.medium()}
         >
-            <Counter
-                id={counter.id}
-                name={counter.name}
-                count={counter.count}
-                target={counter.target}
-                color={counter.color}
-                history={counter.history}
-                onDelete={onDelete}
-                onEdit={onEdit}
-                {...counterProps}
-            />
+            <Animated.View>
+                <Counter
+                    id={counter.id}
+                    name={counter.name}
+                    count={counter.count}
+                    target={counter.target}
+                    color={counter.color}
+                    history={counter.history}
+                    onDelete={onDelete}
+                    onEdit={onEdit}
+                    onIncrement={onIncrement}
+                    {...counterProps}
+                />
+            </Animated.View>
         </Swipeable>
     );
 }
+
+
 
 const styles = StyleSheet.create({
     editAction: {

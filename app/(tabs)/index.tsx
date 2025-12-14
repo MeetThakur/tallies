@@ -17,13 +17,17 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AddCounterModal } from "../../components/AddCounterModal";
+import { ConfirmModal } from "../../components/ConfirmModal";
 import { CustomIncrementModal } from "../../components/CustomIncrementModal";
+import { DataActionsModal } from "../../components/DataActionsModal";
 import { EditCounterModal } from "../../components/EditCounterModal";
+import { ImportChoiceModal } from "../../components/ImportChoiceModal";
 import { SwipeableCounter } from "../../components/SwipeableCounter";
 import { useTheme } from "../../contexts/ThemeContext";
 import { CounterItem, useCounters } from "../../hooks/useCounters";
 import { useSelection } from "../../hooks/useSelection";
 import { useUndo } from "../../hooks/useUndo";
+import { DataManager } from "../../utils/DataManager";
 
 export default function HomeScreen() {
     // Custom hooks
@@ -40,6 +44,7 @@ export default function HomeScreen() {
         resetCounter,
         resetMultipleCounters,
         deleteMultipleCounters,
+        importCounters,
         refreshCounters,
     } = useCounters();
 
@@ -62,6 +67,12 @@ export default function HomeScreen() {
     const [customIncrementModalVisible, setCustomIncrementModalVisible] = useState(false);
     const [currentCounterId, setCurrentCounterId] = useState<string | null>(null);
     const [customModalMode, setCustomModalMode] = useState<"increment" | "decrement">("increment");
+
+    // Data Management Modals
+    const [dataActionsVisible, setDataActionsVisible] = useState(false);
+    const [importChoiceVisible, setImportChoiceVisible] = useState(false);
+    const [importedData, setImportedData] = useState<CounterItem[]>([]);
+
     const [refreshing, setRefreshing] = useState(false);
 
     // QoL features
@@ -71,6 +82,35 @@ export default function HomeScreen() {
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [quickEditModalVisible, setQuickEditModalVisible] = useState(false);
     const [quickEditCounter, setQuickEditCounter] = useState<CounterItem | null>(null);
+
+
+    // Confirmation Modal State
+    const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+    const [confirmConfig, setConfirmConfig] = useState<{
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        isDestructive?: boolean;
+        confirmText?: string;
+    }>({
+        title: "",
+        message: "",
+        onConfirm: () => { },
+    });
+
+    const showConfirm = (title: string, message: string, onConfirm: () => void, isDestructive = false, confirmText = "Confirm") => {
+        setConfirmConfig({
+            title,
+            message,
+            onConfirm: () => {
+                onConfirm();
+                setConfirmModalVisible(false);
+            },
+            isDestructive,
+            confirmText,
+        });
+        setConfirmModalVisible(true);
+    };
 
     // Handlers
     const handleAddCounter = (name: string, target: string, color: string) => {
@@ -153,39 +193,54 @@ export default function HomeScreen() {
     };
 
     const handleDeleteSelected = () => {
-        Alert.alert(
+        showConfirm(
             "Delete Selected",
             `Are you sure you want to delete ${selectedCount} counters?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: () => {
-                        deleteMultipleCounters(selectedIds);
-                        clearSelection();
-                    },
-                },
-            ]
+            () => {
+                deleteMultipleCounters(selectedIds);
+                clearSelection();
+            },
+            true,
+            "Delete"
         );
     };
 
     const handleResetSelected = () => {
-        Alert.alert(
+        showConfirm(
             "Reset Selected",
             `Are you sure you want to reset ${selectedCount} counters to 0?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Reset",
-                    style: "destructive",
-                    onPress: () => {
-                        resetMultipleCounters(selectedIds);
-                        clearSelection();
-                    },
-                },
-            ]
+            () => {
+                resetMultipleCounters(selectedIds);
+                clearSelection();
+            },
+            true,
+            "Reset"
         );
+    };
+
+    const handleExport = async () => {
+        setDataActionsVisible(false);
+        // Small delay to allow modal to close smoothly
+        setTimeout(async () => {
+            await DataManager.exportData(counters);
+        }, 300);
+    };
+
+    const handleImport = async () => {
+        setDataActionsVisible(false);
+        // Small delay
+        setTimeout(async () => {
+            await DataManager.importData((data) => {
+                setImportedData(data);
+                setImportChoiceVisible(true);
+            });
+        }, 300);
+    };
+
+    const finalizeImport = (mode: "merge" | "replace") => {
+        setImportChoiceVisible(false);
+        importCounters(importedData, mode);
+        Alert.alert("Success", "Counters imported successfully");
     };
 
     // Filter and sort counters
@@ -368,6 +423,27 @@ export default function HomeScreen() {
                                         color={isDark ? "#FFF" : "#007AFF"}
                                     />
                                 </TouchableOpacity>
+
+                                {/* Export/Import Configuration Menu */}
+                                <TouchableOpacity
+                                    style={[
+                                        styles.compactButton,
+                                        {
+                                            backgroundColor: isDark
+                                                ? "rgba(255, 255, 255, 0.1)"
+                                                : "transparent",
+                                            borderWidth: isDark ? 0 : 1,
+                                            borderColor: isDark ? "transparent" : borderColor,
+                                        },
+                                    ]}
+                                    onPress={() => setDataActionsVisible(true)}
+                                >
+                                    <Ionicons
+                                        name="settings-outline"
+                                        size={20}
+                                        color={isDark ? "#FFF" : "#007AFF"}
+                                    />
+                                </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
                                         styles.addButton,
@@ -481,6 +557,34 @@ export default function HomeScreen() {
                     onIncrement={handleIncrementByAmount}
                     isDark={isDark}
                     mode={customModalMode}
+                />
+
+                <ConfirmModal
+                    visible={confirmModalVisible}
+                    title={confirmConfig.title}
+                    message={confirmConfig.message}
+                    onConfirm={confirmConfig.onConfirm}
+                    onCancel={() => setConfirmModalVisible(false)}
+                    isDestructive={confirmConfig.isDestructive}
+                    confirmText={confirmConfig.confirmText}
+                    isDark={isDark}
+                />
+
+                <DataActionsModal
+                    visible={dataActionsVisible}
+                    onClose={() => setDataActionsVisible(false)}
+                    onExport={handleExport}
+                    onImport={handleImport}
+                    isDark={isDark}
+                />
+
+                <ImportChoiceModal
+                    visible={importChoiceVisible}
+                    onClose={() => setImportChoiceVisible(false)}
+                    onMerge={() => finalizeImport("merge")}
+                    onReplace={() => finalizeImport("replace")}
+                    count={importedData.length}
+                    isDark={isDark}
                 />
             </SafeAreaView>
         </GestureHandlerRootView>

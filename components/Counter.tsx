@@ -28,6 +28,7 @@ interface CounterProps {
     count: number;
     target?: number;
     color?: string;
+    createdAt?: number;
     history: HistoryEntry[];
     onIncrement: (id: string) => void;
     onDecrement: (id: string) => void;
@@ -51,6 +52,7 @@ const Counter: React.FC<CounterProps> = ({
     count,
     target,
     color = "#007AFF",
+    createdAt,
     history,
     onIncrement,
     onDecrement,
@@ -247,6 +249,17 @@ const Counter: React.FC<CounterProps> = ({
                         )}
                     </View>
                 </View>
+
+                {createdAt && (
+                    <Text
+                        style={[
+                            styles.dateLabel,
+                            { color: subTextColor },
+                        ]}
+                    >
+                        Created {new Date(createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </Text>
+                )}
 
                 {target && target > 0 && (
                     <View
@@ -666,6 +679,13 @@ const styles = StyleSheet.create({
         marginTop: 4,
         fontWeight: "600",
         opacity: 0.65,
+        letterSpacing: 0.2,
+    },
+    dateLabel: {
+        fontSize: 11,
+        marginBottom: 8,
+        fontWeight: "500",
+        opacity: 0.6,
         letterSpacing: 0.2,
     },
     headerActions: {
