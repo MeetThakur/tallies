@@ -1,11 +1,20 @@
 import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import { CounterItem } from "../hooks/useCounters";
 
+interface ExportCallbacks {
+    onSuccess?: () => void;
+    onError?: (message: string) => void;
+}
+
+interface ImportCallbacks {
+    onDataRead?: (data: CounterItem[]) => void;
+    onError?: (message: string) => void;
+}
+
 export const DataManager = {
-    exportData: async (counters: CounterItem[]) => {
+    exportData: async (counters: CounterItem[], callbacks?: ExportCallbacks) => {
         try {
             console.log("Initiating export...");
             const data = JSON.stringify(counters, null, 2);
@@ -13,44 +22,43 @@ export const DataManager = {
 
             if (Platform.OS === "android") {
                 try {
-                    const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+                    const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
                     if (permissions.granted) {
-                        const uri = await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, "application/json");
-                        await FileSystem.writeAsStringAsync(uri, data, { encoding: FileSystem.EncodingType.UTF8 });
-                        Alert.alert("Success", "Backup saved successfully!");
+                        const uri = await StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, "application/json");
+                        await writeAsStringAsync(uri, data, { encoding: EncodingType.UTF8 });
+                        callbacks?.onSuccess?.();
                         return; // Exit if successful
                     }
                 } catch (safError) {
                     console.warn("SAF failed, falling back to share:", safError);
-                    Alert.alert("Folder Access Error", "Cannot save directly to the selected folder. Opening share menu instead.");
                     // Fall through to fallback
                 }
 
                 // Fallback to sharing if permission denied or SAF fails
-                const directory = FileSystem.cacheDirectory;
+                const directory = cacheDirectory;
                 if (!directory) return;
                 const filePath = `${directory}${fileName}`;
-                await FileSystem.writeAsStringAsync(filePath, data, { encoding: "utf8" });
+                await writeAsStringAsync(filePath, data, { encoding: "utf8" });
                 if (await Sharing.isAvailableAsync()) {
                     await Sharing.shareAsync(filePath, { mimeType: "application/json", dialogTitle: "Export Tallies Data", UTI: "public.json" });
                 }
             } else {
                 // iOS and others
-                const directory = FileSystem.cacheDirectory;
+                const directory = cacheDirectory;
                 if (!directory) return;
                 const filePath = `${directory}${fileName}`;
-                await FileSystem.writeAsStringAsync(filePath, data, { encoding: "utf8" });
+                await writeAsStringAsync(filePath, data, { encoding: "utf8" });
                 if (await Sharing.isAvailableAsync()) {
                     await Sharing.shareAsync(filePath, { mimeType: "application/json", dialogTitle: "Export Tallies Data", UTI: "public.json" });
                 }
             }
         } catch (error) {
             console.error("Export failed with error:", error);
-            Alert.alert("Export Error", `Failed to export data: ${error instanceof Error ? error.message : String(error)}`);
+            callbacks?.onError?.(`Failed to export data: ${error instanceof Error ? error.message : String(error)}`);
         }
     },
 
-    importData: async (onDataRead: (data: CounterItem[]) => void) => {
+    importData: async (callbacks?: ImportCallbacks) => {
         try {
             console.log("Initiating import...");
             const result = await DocumentPicker.getDocumentAsync({
@@ -67,7 +75,7 @@ export const DataManager = {
 
             if (!result.assets || result.assets.length === 0) {
                 console.warn("No assets found in import result");
-                Alert.alert("Import Error", "No file selected.");
+                callbacks?.onError?.("No file selected.");
                 return;
             }
 
@@ -79,11 +87,11 @@ export const DataManager = {
 
             let fileContent;
             try {
-                fileContent = await FileSystem.readAsStringAsync(file.uri);
+                fileContent = await readAsStringAsync(file.uri);
                 console.warn(`File content read, length: ${fileContent.length}`);
             } catch (readError) {
                 console.error("Failed to read file:", readError);
-                Alert.alert("Import Error", "Failed to read the selected file.");
+                callbacks?.onError?.("Failed to read the selected file.");
                 return;
             }
 
@@ -93,22 +101,21 @@ export const DataManager = {
                 console.warn("File parsed successfully. Is Array:", Array.isArray(parsedData));
             } catch (parseError) {
                 console.error("Failed to parse JSON:", parseError);
-                Alert.alert("Import Error", "The file is not a valid JSON file.");
+                callbacks?.onError?.("The file is not a valid JSON file.");
                 return;
             }
 
             if (Array.isArray(parsedData) && parsedData.every((item: any) => item.id && item.name)) {
                 console.log(`Valid data found via import. Count: ${parsedData.length}`);
-                // Instead of asking here, we pass the data back to the UI
-                onDataRead(parsedData);
+                callbacks?.onDataRead?.(parsedData);
             } else {
                 console.warn("Invalid data structure in imported file");
-                Alert.alert("Invalid File", "The selected file does not contain valid counter data.");
+                callbacks?.onError?.("The selected file does not contain valid counter data.");
             }
 
         } catch (error) {
             console.error("Import failed with critical error:", error);
-            Alert.alert("Import Error", `Failed to import data: ${error instanceof Error ? error.message : String(error)}`);
+            callbacks?.onError?.(`Failed to import data: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 };

@@ -1,9 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
-    Alert,
     RefreshControl,
-    SafeAreaView,
     StatusBar,
     StyleSheet,
     Text,
@@ -15,8 +13,9 @@ import DraggableFlatList, {
     ScaleDecorator,
 } from "react-native-draggable-flatlist";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { AddCounterModal } from "../../components/AddCounterModal";
+import { AlertModal } from "../../components/AlertModal";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { CustomIncrementModal } from "../../components/CustomIncrementModal";
 import { DataActionsModal } from "../../components/DataActionsModal";
@@ -60,9 +59,6 @@ export default function HomeScreen() {
         isSelected,
     } = useSelection(counters);
 
-    // Insets for safe area
-    const insets = useSafeAreaInsets();
-
     // Modal states
     const [addModalVisible, setAddModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
@@ -85,7 +81,6 @@ export default function HomeScreen() {
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [quickEditModalVisible, setQuickEditModalVisible] = useState(false);
     const [quickEditCounter, setQuickEditCounter] = useState<CounterItem | null>(null);
-
 
     // Confirmation Modal State
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -113,6 +108,23 @@ export default function HomeScreen() {
             confirmText,
         });
         setConfirmModalVisible(true);
+    };
+
+    // Alert Modal State
+    const [alertModalVisible, setAlertModalVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState<{
+        title: string;
+        message: string;
+        type: "success" | "error" | "info";
+    }>({
+        title: "",
+        message: "",
+        type: "info",
+    });
+
+    const showAlert = (title: string, message: string, type: "success" | "error" | "info" = "info") => {
+        setAlertConfig({ title, message, type });
+        setAlertModalVisible(true);
     };
 
     // Handlers
@@ -223,19 +235,23 @@ export default function HomeScreen() {
 
     const handleExport = async () => {
         setDataActionsVisible(false);
-        // Small delay to allow modal to close smoothly
         setTimeout(async () => {
-            await DataManager.exportData(counters);
+            await DataManager.exportData(counters, {
+                onSuccess: () => showAlert("Success", "Backup saved successfully!", "success"),
+                onError: (msg) => showAlert("Export Error", msg, "error"),
+            });
         }, 300);
     };
 
     const handleImport = async () => {
         setDataActionsVisible(false);
-        // Small delay
         setTimeout(async () => {
-            await DataManager.importData((data) => {
-                setImportedData(data);
-                setImportChoiceVisible(true);
+            await DataManager.importData({
+                onDataRead: (data) => {
+                    setImportedData(data);
+                    setImportChoiceVisible(true);
+                },
+                onError: (msg) => showAlert("Import Error", msg, "error"),
             });
         }, 300);
     };
@@ -243,7 +259,9 @@ export default function HomeScreen() {
     const finalizeImport = (mode: "merge" | "replace") => {
         setImportChoiceVisible(false);
         importCounters(importedData, mode);
-        Alert.alert("Success", "Counters imported successfully");
+        setTimeout(() => {
+            showAlert("Success", "Counters imported successfully", "success");
+        }, 300);
     };
 
     // Filter and sort counters
@@ -324,7 +342,6 @@ export default function HomeScreen() {
                     styles.container,
                     {
                         backgroundColor: bgColor,
-                        paddingTop: insets.top
                     }
                 ]}
             >
@@ -595,6 +612,15 @@ export default function HomeScreen() {
                     onMerge={() => finalizeImport("merge")}
                     onReplace={() => finalizeImport("replace")}
                     count={importedData.length}
+                    isDark={isDark}
+                />
+
+                <AlertModal
+                    visible={alertModalVisible}
+                    title={alertConfig.title}
+                    message={alertConfig.message}
+                    onClose={() => setAlertModalVisible(false)}
+                    type={alertConfig.type}
                     isDark={isDark}
                 />
             </SafeAreaView>
