@@ -1,4 +1,5 @@
 import * as DocumentPicker from "expo-document-picker";
+import { EncodingType, StorageAccessFramework, cacheDirectory, readAsStringAsync, writeAsStringAsync } from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
 import { CounterItem } from "../hooks/useCounters";
