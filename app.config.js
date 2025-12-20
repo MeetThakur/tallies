@@ -54,6 +54,16 @@ export default ({ config }) => {
                 },
             ],
             "expo-font",
+            [
+                "expo-build-properties",
+                {
+                    "android": {
+                        "extraGradleProps": {
+                            "reactNativeArchitectures": "arm64-v8a"
+                        }
+                    }
+                }
+            ],
             ...(isGithubRelease ? ["./plugins/withMobileArch"] : [])
         ],
         experiments: {
