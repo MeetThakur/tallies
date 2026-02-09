@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     KeyboardAvoidingView,
     Modal,
@@ -13,276 +13,338 @@ import {
 } from "react-native";
 import { PRESET_COLORS } from "../constants/colors";
 import { CounterItem } from "../hooks/useCounters";
-import { sanitizeCounterName, validateCounterName, validateTarget } from "../utils/validation";
+import {
+    sanitizeCounterName,
+    validateCounterName,
+    validateTarget,
+} from "../utils/validation";
 import { ColorPickerWrapper } from "./ColorPickerWrapper";
 
 interface EditCounterModalProps {
-    visible: boolean;
-    counter: CounterItem | null;
-    onClose: () => void;
-    onSave: (id: string, name: string, target: string, color: string, count: string) => void;
-    isDark: boolean;
+  visible: boolean;
+  counter: CounterItem | null;
+  onClose: () => void;
+  onSave: (
+    id: string,
+    name: string,
+    target: string,
+    color: string,
+    count: string,
+  ) => void;
+  isDark: boolean;
 }
 
 export function EditCounterModal({
-    visible,
-    counter,
-    onClose,
-    onSave,
-    isDark,
+  visible,
+  counter,
+  onClose,
+  onSave,
+  isDark,
 }: EditCounterModalProps) {
-    const [name, setName] = useState(counter?.name || "");
-    const [target, setTarget] = useState(counter?.target?.toString() || "");
-    const [currentCount, setCurrentCount] = useState(counter?.count?.toString() || "0");
-    const [selectedColor, setSelectedColor] = useState<string>(
-        counter?.color || PRESET_COLORS[0]
-    );
-    const [nameError, setNameError] = useState<string | null>(null);
-    const [targetError, setTargetError] = useState<string | null>(null);
-    const [countError, setCountError] = useState<string | null>(null);
+  const [name, setName] = useState(counter?.name || "");
+  const [target, setTarget] = useState(counter?.target?.toString() || "");
+  const [currentCount, setCurrentCount] = useState(
+    counter?.count?.toString() || "0",
+  );
+  const [selectedColor, setSelectedColor] = useState<string>(
+    counter?.color || PRESET_COLORS[0],
+  );
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [targetError, setTargetError] = useState<string | null>(null);
+  const [countError, setCountError] = useState<string | null>(null);
 
-    // Update state when counter changes
-    React.useEffect(() => {
-        if (counter) {
-            setName(counter.name);
-            setTarget(counter.target?.toString() || "");
-            setCurrentCount(counter.count?.toString() || "0");
-            setSelectedColor(counter.color || PRESET_COLORS[0]);
-            setNameError(null);
-            setTargetError(null);
-            setCountError(null);
-        }
-    }, [counter]);
+  // Update state when counter changes
+  useEffect(() => {
+    if (counter) {
+      setName(counter.name);
+      setTarget(counter.target?.toString() || "");
+      setCurrentCount(counter.count?.toString() || "0");
+      setSelectedColor(counter.color || PRESET_COLORS[0]);
+      setNameError(null);
+      setTargetError(null);
+      setCountError(null);
+    }
+  }, [counter]);
 
-    const handleSave = () => {
-        if (!counter) return;
+  const handleSave = () => {
+    if (!counter) return;
 
-        // Validate inputs
-        const sanitizedName = sanitizeCounterName(name);
-        const nameValidation = validateCounterName(sanitizedName);
-        const targetValidation = target ? validateTarget(target) : null;
+    // Validate inputs
+    const sanitizedName = sanitizeCounterName(name);
+    const nameValidation = validateCounterName(sanitizedName);
+    const targetValidation = target ? validateTarget(target) : null;
 
-        // Validate count
-        const countNum = parseInt(currentCount, 10);
-        if (isNaN(countNum)) {
-            setCountError("Count must be a valid number");
-            return;
-        }
+    // Validate count
+    const countNum = parseInt(currentCount, 10);
+    if (isNaN(countNum)) {
+      setCountError("Count must be a valid number");
+      return;
+    }
 
-        if (nameValidation) {
-            setNameError(nameValidation);
-            return;
-        }
+    if (nameValidation) {
+      setNameError(nameValidation);
+      return;
+    }
 
-        if (targetValidation) {
-            setTargetError(targetValidation);
-            return;
-        }
+    if (targetValidation) {
+      setTargetError(targetValidation);
+      return;
+    }
 
-        onSave(counter.id, sanitizedName, target, selectedColor, currentCount);
-        handleClose();
-    };
+    onSave(counter.id, sanitizedName, target, selectedColor, currentCount);
+    handleClose();
+  };
 
-    const handleClose = () => {
-        setNameError(null);
-        setTargetError(null);
-        setCountError(null);
-        onClose();
-    };
+  const handleResetCount = () => {
+    setCurrentCount("0");
+  };
 
-    const textColor = isDark ? "#FFFFFF" : "#000000";
-    const bgColor = isDark ? "#1C1C1E" : "#FFF";
-    const subtleTextColor = isDark ? "#ABABAB" : "#666666";
-    const borderColor = isDark ? "#2C2C2C" : "#E5E5EA";
-    const inputBg = isDark ? "#1E1E1E" : "#F2F2F7";
+  const handleClose = () => {
+    setNameError(null);
+    setTargetError(null);
+    setCountError(null);
+    onClose();
+  };
 
-    if (!counter) return null;
+  const textColor = isDark ? "#FFFFFF" : "#000000";
+  const bgColor = isDark ? "#1C1C1E" : "#FFFFFF";
+  const subtleTextColor = isDark ? "#8E8E93" : "#8E8E93";
+  const inputBg = isDark ? "#2C2C2E" : "#F2F2F7";
+  const separatorColor = isDark ? "#38383A" : "#E5E5EA";
+  const placeholderColor = isDark ? "#636366" : "#C7C7CC";
 
-    return (
-        <Modal
-            animationType="slide"
-            transparent={true}
-            visible={visible}
-            onRequestClose={handleClose}
-        >
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.modalOverlay}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+  if (!counter) return null;
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={handleClose}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.modalOverlay}
+      >
+        <TouchableOpacity
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={handleClose}
+        />
+        <View style={[styles.modalContent, { backgroundColor: bgColor }]}>
+          <View style={styles.dragIndicator} />
+
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={handleClose}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-                <View style={[styles.modalContent, { backgroundColor: bgColor }]}>
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                        keyboardShouldPersistTaps="handled"
-                    >
-                        {/* Header */}
-                        <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: textColor }]}>
-                                Edit Counter
-                            </Text>
-                            <TouchableOpacity onPress={handleClose}>
-                                <Ionicons name="close" size={24} color={subtleTextColor} />
-                            </TouchableOpacity>
-                        </View>
+              <Text style={[styles.cancelText, { color: subtleTextColor }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, { color: textColor }]}>
+              Edit Counter
+            </Text>
+            <TouchableOpacity
+              onPress={handleSave}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={[styles.saveText, { color: selectedColor }]}>
+                Save
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-                        {/* Name Input */}
-                        <Text style={[styles.inputLabel, { color: subtleTextColor }]}>Name</Text>
-                        <TextInput
-                            style={[
-                                styles.input,
-                                {
-                                    backgroundColor: inputBg,
-                                    color: textColor,
-                                    borderColor: nameError ? "#FF3B30" : borderColor,
-                                },
-                            ]}
-                            placeholder="Enter counter name"
-                            placeholderTextColor={subtleTextColor}
-                            value={name}
-                            onChangeText={(text) => {
-                                setName(text);
-                                setNameError(null);
-                            }}
-                        />
-                        {nameError && <Text style={styles.errorText}>{nameError}</Text>}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.formContainer}>
+              {/* Name Section */}
+              <View
+                style={[
+                  styles.inputGroup,
+                  { borderBottomColor: separatorColor },
+                ]}
+              >
+                <Text style={[styles.label, { color: textColor }]}>Name</Text>
+                <TextInput
+                  style={[styles.input, { color: textColor }]}
+                  value={name}
+                  onChangeText={(text) => {
+                    setName(text);
+                    setNameError(null);
+                  }}
+                  placeholder="Counter Name"
+                  placeholderTextColor={placeholderColor}
+                />
+              </View>
+              {nameError && <Text style={styles.errorText}>{nameError}</Text>}
 
-                        {/* Target Input */}
-                        <Text style={[styles.inputLabel, { color: subtleTextColor }]}>
-                            Target (Optional)
-                        </Text>
-                        <TextInput
-                            style={[
-                                styles.input,
-                                {
-                                    backgroundColor: inputBg,
-                                    color: textColor,
-                                    borderColor: targetError ? "#FF3B30" : borderColor,
-                                },
-                            ]}
-                            placeholder="Enter target number"
-                            placeholderTextColor={subtleTextColor}
-                            value={target}
-                            onChangeText={(text) => {
-                                setTarget(text);
-                                setTargetError(null);
-                            }}
-                            keyboardType="numeric"
-                        />
-                        {targetError && <Text style={styles.errorText}>{targetError}</Text>}
-
-                        {/* Color Picker */}
-                        <Text style={[styles.inputLabel, { color: subtleTextColor }]}>Color</Text>
-                        <ColorPickerWrapper
-                            selectedColor={selectedColor}
-                            onSelectColor={setSelectedColor}
-                        />
-
-                        {/* Current Count Input */}
-                        <Text style={[styles.inputLabel, { color: subtleTextColor }]}>
-                            Current Count
-                        </Text>
-                        <TextInput
-                            style={[
-                                styles.input,
-                                {
-                                    backgroundColor: inputBg,
-                                    color: textColor,
-                                    borderColor: countError ? "#FF3B30" : borderColor,
-                                },
-                            ]}
-                            placeholder="Enter current count"
-                            placeholderTextColor={subtleTextColor}
-                            value={currentCount}
-                            onChangeText={(text) => {
-                                setCurrentCount(text);
-                                setCountError(null);
-                            }}
-                            keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
-                        />
-                        {countError && <Text style={styles.errorText}>{countError}</Text>}
-
-                        {/* Save Button */}
-                        <TouchableOpacity
-                            style={[
-                                styles.saveButton,
-                                { backgroundColor: isDark ? "#0A84FF" : "#007AFF" },
-                            ]}
-                            onPress={handleSave}
-                        >
-                            <Text style={styles.saveButtonText}>Save Changes</Text>
-                        </TouchableOpacity>
-                    </ScrollView>
+              {/* Count Section */}
+              <View
+                style={[
+                  styles.inputGroup,
+                  { borderBottomColor: separatorColor },
+                ]}
+              >
+                <Text style={[styles.label, { color: textColor }]}>Count</Text>
+                <View style={styles.rowInputContainer}>
+                  <TextInput
+                    style={[styles.input, { color: textColor }]}
+                    value={currentCount}
+                    onChangeText={(text) => {
+                      setCurrentCount(text);
+                      setCountError(null);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor={placeholderColor}
+                  />
+                  <TouchableOpacity
+                    onPress={handleResetCount}
+                    style={styles.inlineResetButton}
+                  >
+                    <Ionicons
+                      name="refresh-circle"
+                      size={20}
+                      color={subtleTextColor}
+                    />
+                  </TouchableOpacity>
                 </View>
-            </KeyboardAvoidingView>
-        </Modal>
-    );
+              </View>
+              {countError && <Text style={styles.errorText}>{countError}</Text>}
+
+              {/* Target Section */}
+              <View
+                style={[
+                  styles.inputGroup,
+                  { borderBottomColor: separatorColor },
+                ]}
+              >
+                <Text style={[styles.label, { color: textColor }]}>Target</Text>
+                <TextInput
+                  style={[styles.input, { color: textColor }]}
+                  value={target}
+                  onChangeText={(text) => {
+                    setTarget(text);
+                    setTargetError(null);
+                  }}
+                  keyboardType="numeric"
+                  placeholder="Optional"
+                  placeholderTextColor={placeholderColor}
+                />
+              </View>
+              {targetError && (
+                <Text style={styles.errorText}>{targetError}</Text>
+              )}
+
+              {/* Color Picker Section */}
+              <View style={styles.colorSection}>
+                <Text
+                  style={[styles.label, { color: textColor, marginBottom: 12 }]}
+                >
+                  Color
+                </Text>
+                <ColorPickerWrapper
+                  selectedColor={selectedColor}
+                  onSelectColor={setSelectedColor}
+                />
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
 
 const styles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        justifyContent: "flex-end",
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-    },
-    modalContent: {
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        maxHeight: "90%",
-    },
-    modalHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 20,
-    },
-    modalTitle: {
-        fontSize: 24,
-        fontWeight: "800",
-    },
-    inputLabel: {
-        fontSize: 14,
-        fontWeight: "600",
-        marginBottom: 8,
-        marginTop: 12,
-    },
-    input: {
-        padding: 16,
-        borderRadius: 12,
-        fontSize: 16,
-        borderWidth: 1,
-    },
-    errorText: {
-        color: "#FF3B30",
-        fontSize: 12,
-        marginTop: 4,
-        marginLeft: 4,
-    },
-    infoBox: {
-        marginTop: 20,
-        padding: 16,
-        borderRadius: 12,
-        backgroundColor: "rgba(0, 122, 255, 0.1)",
-    },
-    infoLabel: {
-        fontSize: 12,
-        fontWeight: "600",
-        marginBottom: 4,
-    },
-    infoValue: {
-        fontSize: 32,
-        fontWeight: "800",
-    },
-    saveButton: {
-        padding: 18,
-        borderRadius: 12,
-        alignItems: "center",
-        marginTop: 24,
-        marginBottom: 20,
-    },
-    saveButtonText: {
-        color: "#FFFFFF",
-        fontSize: 18,
-        fontWeight: "800",
-    },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 40,
+    maxHeight: "90%",
+  },
+  dragIndicator: {
+    width: 36,
+    height: 5,
+    backgroundColor: "#D1D1D6",
+    borderRadius: 2.5,
+    alignSelf: "center",
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "rgba(0,0,0,0.1)",
+    marginBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  cancelText: {
+    fontSize: 17,
+    fontWeight: "400",
+  },
+  saveText: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  formContainer: {
+    paddingHorizontal: 16,
+  },
+  inputGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    borderBottomWidth: 0.5,
+  },
+  label: {
+    fontSize: 17,
+    fontWeight: "400",
+    width: 80,
+  },
+  input: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: "400",
+    textAlign: "right",
+  },
+  rowInputContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  inlineResetButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  colorSection: {
+    marginTop: 24,
+    paddingVertical: 16,
+  },
+  errorText: {
+    color: "#FF3B30",
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: "right",
+  },
 });
